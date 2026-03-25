@@ -158,6 +158,8 @@ python calculate_xt.py
 
 ### 3. Assign xT to Match Events
 
+```python
+from models.assign_xt_to_events import xTAssigner
 from statsbombpy import sb
 
 # Load xT values from step 2
@@ -174,17 +176,33 @@ events_with_xt.to_csv('data/processed/match_with_xt.csv', index=False)
 ```
 
 **Input:** `xt_values.npz` from step 2 + Match ID from StatsBomb  
-**Output:** CSV with all events and their xT valuesigner = xTAssigner('data/processed/xt_values.npz')
-events_with_xt = assigner.assign_xt_to_match(match_id=3773386)
-
-events_with_xt.to_csv('data/processed/match_with_xt.csv', index=False)
-```
+**Output:** CSV with all events and their xT values
 
 Or run directly:
 ```bash
 cd models
 python assign_xt_to_events.py
 ```
+
+### 4. Generate xT Heatmap
+
+When you run the xT calculation module, it now saves a heatmap image automatically.
+
+```bash
+python models/calculate_xt.py
+```
+
+This generates:
+- `data/processed/xt_values.npz`
+- `assets/xt_heatmap.png`
+
+## Sample Output
+
+### xT Heatmap (12x8 Grid)
+
+Includes white goal reference markers at both ends of the pitch and a formal legend above the heatmap.
+
+![xT Heatmap](assets/xt_heatmap.png)
 
 ## Event-Specific xT Calculations
 
@@ -225,12 +243,15 @@ The `assign_xt_to_match()` function returns a DataFrame with these columns:
 
 ### Top Actions in a Match
 ```python
-assigner.analyze_top_actions(events_with_xt, n=10)
+top_actions = events_with_xt.sort_values('xT_delta', ascending=False).head(10)
+print(top_actions[['player', 'team', 'event_type', 'xT_delta']])
 ```
 
 ### Player Aggregations
 ```python
-assigner.player_summary(events_with_xt)
+player_summary = events_with_xt.groupby('player', as_index=False)['xT_delta'].sum()
+player_summary = player_summary.sort_values('xT_delta', ascending=False)
+print(player_summary.head(10))
 ```
 
 ## Data Source

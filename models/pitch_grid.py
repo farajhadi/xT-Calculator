@@ -52,6 +52,6 @@ class PitchGrid:
 
 if __name__ == "__main__":
     grid = PitchGrid(n_cols=12, n_rows=8)
-    print(f"Created {grid.n_cols}×{grid.n_rows} pitch grid ({grid.total_zones} zones)")
+    print(f"Created {grid.n_cols}x{grid.n_rows} pitch grid ({grid.n_zones} zones)")
     print(f"Zone 0 center: {grid.get_zone_center(0)}")
     print(f"Zone 95 center: {grid.get_zone_center(95)}")

@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 import sys
 sys.path.append('models')
 from transition_matrix import TransitionMatrixBuilder
@@ -83,6 +84,75 @@ class xTCalculator:
         
         np.savez(filepath, xt_values=self.xt_values)
         print(f"\n✓ Saved xT values to {filepath}")
+
+
+    def plot_heatmap(self, output_path='assets/xt_heatmap.png', show=False, cmap='YlOrRd'):
+        """Plot and save a 12x8 xT heatmap over the pitch dimensions with goal references."""
+        import os
+
+        if self.xt_values is None:
+            raise ValueError("xT values not calculated. Run calculate_xt_iterative() first.")
+
+        xt_grid = self.get_xt_grid()
+
+        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+
+        fig, ax = plt.subplots(figsize=(12, 7))
+        im = ax.imshow(
+            xt_grid,
+            origin='lower',
+            extent=[0, self.grid.pitch_length, 0, self.grid.pitch_width],
+            cmap=cmap,
+            aspect='auto'
+        )
+
+        # Draw grid lines to make the 12x8 zones visible.
+        for x in np.linspace(0, self.grid.pitch_length, self.grid.n_cols + 1):
+            ax.axvline(x=x, color='white', linewidth=0.6, alpha=0.5)
+        for y in np.linspace(0, self.grid.pitch_width, self.grid.n_rows + 1):
+            ax.axhline(y=y, color='white', linewidth=0.6, alpha=0.5)
+
+        # Draw goal references at both ends of the pitch (StatsBomb dimensions).
+        goal_y_min, goal_y_max = 36, 44
+        goal_center_y = (goal_y_min + goal_y_max) / 2
+        ax.plot([0, 0], [goal_y_min, goal_y_max], color='white', linewidth=3, zorder=4)
+        ax.plot([self.grid.pitch_length, self.grid.pitch_length], [goal_y_min, goal_y_max], color='white', linewidth=3, zorder=4)
+        ax.scatter(
+            [0, self.grid.pitch_length],
+            [goal_center_y, goal_center_y],
+            color='white',
+            s=28,
+            zorder=5,
+            label='Goal Reference Markers'
+        )
+
+        ax.set_title('Expected Threat (xT) Heatmap - 12x8 Pitch Grid', fontsize=14, pad=12)
+        ax.set_xlabel('Pitch Length (yards)')
+        ax.set_ylabel('Pitch Width (yards)')
+
+        # Use a formal legend style in the top-left for readability.
+        ax.legend(
+            loc='upper left',
+            bbox_to_anchor=(0.0, 1.18),
+            frameon=True,
+            fancybox=False,
+            framealpha=1.0,
+            edgecolor='black',
+            title='Pitch References',
+            fontsize=9,
+            title_fontsize=10
+        )
+
+        cbar = fig.colorbar(im, ax=ax)
+        cbar.set_label('xT value')
+
+        plt.tight_layout()
+        plt.savefig(output_path, dpi=200, bbox_inches='tight')
+        if show:
+            plt.show()
+        plt.close(fig)
+
+        print(f"✓ Saved xT heatmap to {output_path}")
     
     
     def print_summary(self):
@@ -129,6 +199,7 @@ if __name__ == "__main__":
     
     # Save results
     calc.save()
+    calc.plot_heatmap(output_path='assets/xt_heatmap.png', show=False)
     
     print("\n✓ xT calculation complete")
 
